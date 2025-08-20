@@ -41,6 +41,7 @@ module.exports = {
         summary:
           "• Stocks rise on strong earnings\n• Tech leads gains\n• Investors eye inflation print\n• Bond yields steady\n• Analysts turn cautiously optimistic",
         sentiment: "positive",
+        impact: "",
         keywords: "markets,earnings,tech,stocks,inflation",
         tags: "markets,tech",
         createdAt: now,
@@ -55,6 +56,7 @@ module.exports = {
         publishedAt: new Date("2025-08-14T10:30:00Z"),
         summary: null,
         sentiment: null,
+        impact: null,
         keywords: null,
         tags: "policy,environment",
         createdAt: now,
@@ -69,6 +71,7 @@ module.exports = {
         publishedAt: new Date("2025-08-13T12:00:00Z"),
         summary: null,
         sentiment: null,
+        impact: null,
         keywords: null,
         tags: "mobile,hardware",
         createdAt: now,
