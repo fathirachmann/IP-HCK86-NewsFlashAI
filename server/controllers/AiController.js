@@ -12,12 +12,15 @@ const MODEL_ID = process.env.GEMINI_MODEL || "gemini-1.5-flash";
 
 function buildPrompt(text) {
   const clipped = (text || "").slice(0, 8000); // safety batas panjang
-  return `You are an expert news summarizer.
-Summarize the following article into EXACTLY 5 concise bullet points (max ~15 words each).
+  return `You are an expert news summariser.
+Summarise the following article into EXACTLY 5 concise bullet points (max ~15 words each).
 Then classify overall sentiment as "positive", "neutral", or "negative".
 Also provide up to 5 keywords.
+Finally, assess the potential impact of the news and return it as a single string in the format:
+"Level - short description impact"
+Example: "High - Could affect global nickel supply chain".
 
-Return STRICT JSON ONLY with keys: bullets, sentiment, keywords.
+Return STRICT JSON ONLY with keys: bullets, sentiment, keywords, impact.
 NO extra text.
 
 Article:
@@ -29,7 +32,8 @@ JSON schema:
 {
   "bullets": ["...", "...", "...", "...", "..."],
   "sentiment": "positive|neutral|negative",
-  "keywords": ["...", "..."]
+  "keywords": ["...", "..."],
+  "impact": "Level - short description"
 }`;
 }
 
@@ -84,7 +88,7 @@ class AiController {
       }
 
       // Validasi minimal
-      if (!result || !Array.isArray(result.bullets) || !result.sentiment) {
+      if (!result || !Array.isArray(result.bullets) || !result.sentiment || !result.impact) {
         throw { status: 502, message: "AI response invalid" };
       }
 
@@ -109,6 +113,7 @@ class AiController {
             summary: result.bullets.join("\n"),
             sentiment: result.sentiment,
             keywords: (result.keywords || []).join(","),
+            impact: result.impact,
           });
           saved = targetArticle;
         }
@@ -118,6 +123,7 @@ class AiController {
         bullets: result.bullets,
         sentiment: result.sentiment,
         keywords: result.keywords || [],
+        impact: result.impact,
         savedArticleId: saved?.id || null,
       });
     } catch (err) {
