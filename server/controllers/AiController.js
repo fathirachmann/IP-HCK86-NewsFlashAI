@@ -1,11 +1,11 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const { GoogleGenAI } = require("@google/genai");
 const { Article } = require("../models");
 const { extractTextFromUrl } = require("../utils/extractText");
 
 // Schema JSON final
 // { "bullets": string[<=5], "sentiment": "positive|neutral|negative", "keywords": string[<=5] }
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+const ai = new GoogleGenAI({apiKey: process.env.GOOGLE_API_KEY});
 
 // cepat: "gemini-1.5-flash"; lebih akurat: "gemini-1.5-pro"
 const MODEL_ID = process.env.GEMINI_MODEL || "gemini-1.5-flash";
@@ -34,10 +34,12 @@ JSON schema:
 }
 
 async function callGemini(text) {
-  const model = genAI.getGenerativeModel({ model: MODEL_ID });
   const prompt = buildPrompt(text);
-  const resp = await model.generateContent(prompt);
-  const raw = resp.response.text(); // SDK sudah gabung kandidat
+  const resp = await ai.models.generateContent({
+    model: MODEL_ID,
+    contents: prompt,
+  });
+  const raw = resp.text;
   const jsonStr = raw.replace(/```json|```/g, "").trim();
   return JSON.parse(jsonStr);
 }
