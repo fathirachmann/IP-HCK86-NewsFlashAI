@@ -1,6 +1,7 @@
 const { OAuth2Client } = require("google-auth-library");
 const { User } = require("../models");
 const { httpError } = require("../utils/httpError");
+const { signToken } = require("../utils/jwt");
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -28,11 +29,14 @@ class AuthController {
         defaults: { name: payload.name, picture: payload.picture }
       });
 
-      res.json({
+      const token = signToken({ id: user.id, email: user.email });
+
+      res.status(200).json({
         id: user.id,
         email: user.email,
         name: user.name,
-        picture: user.picture
+        picture: user.picture,
+        access_token: token
       });
     } catch (err) {
       next(err);

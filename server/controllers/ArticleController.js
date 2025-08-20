@@ -45,7 +45,7 @@ class ArticleController {
       }
 
       await article.update({ tags });
-      res.json(article);
+      res.status(200).json(article);
     } catch (err) {
       next(err);
     }
@@ -60,7 +60,7 @@ class ArticleController {
       if (!article) throw httpError.notFound("Article not found");
 
       await article.destroy();
-      res.json({ message: "Article deleted" });
+      res.status(200).json({ message: "Article deleted" });
     } catch (err) {
       next(err);
     }

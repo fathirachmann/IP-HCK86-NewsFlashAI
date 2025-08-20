@@ -119,7 +119,7 @@ class AiController {
         }
       }
 
-      res.json({
+      res.status(200).json({
         bullets: result.bullets,
         sentiment: result.sentiment,
         keywords: result.keywords || [],
