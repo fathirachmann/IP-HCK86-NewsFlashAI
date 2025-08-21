@@ -1,233 +1,248 @@
-// src/pages/MyArticlePage.jsx
-import React, { useEffect, useMemo, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  fetchArticles,
-  resummarizeArticle,
-  deleteArticle,
-  selectArticles,
-  selectArticlesLoading,
-  selectArticlesError,
-} from "../store/articlesSlice";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
+import ArticleCard from "../components/ArticleCard";
+import { BASE_URL } from "../utils/base-http";
 
-// ------------------------------
-// TEMPORARY HORIZONTAL CARD (NewsFlashAI style)
-// ------------------------------
-function TempHorizontalCard({ article, onResummarize, onDelete }) {
-  const { picture, title, url, impact, sentiment, summary, keywords } = article;
+export default function MyArticlesPage() {
+  const navigate = useNavigate();
+  const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const bullets = String(summary || "")
-    .split("\n")
-    .map((s) => s.trim())
-    .filter(Boolean);
+  function getAuthHeaders() {
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }
 
-  const chips = String(keywords || "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
+  function ensureAuthedOrRedirect() {
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+    if (!token) {
+      navigate("/login");
+      return false;
+    }
+    return true;
+  }
 
-  const sentimentBadge = {
-    positive:
-      "bg-emerald-100 text-emerald-900 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-200 dark:border-emerald-700/60",
-    neutral:
-      "bg-slate-100 text-slate-900 border-slate-200 dark:bg-slate-800/60 dark:text-slate-200 dark:border-slate-700",
-    negative:
-      "bg-rose-100 text-rose-900 border-rose-200 dark:bg-rose-900/40 dark:text-rose-200 dark:border-rose-700/60",
-  }[sentiment] || "bg-slate-100 text-slate-900 border-slate-200 dark:bg-slate-800/60 dark:text-slate-200 dark:border-slate-700";
-
-  return (
-    <div className="w-full overflow-hidden rounded-2xl border border-slate-200 bg-white/80 backdrop-blur-sm shadow-sm dark:bg-slate-900/60 dark:border-slate-800">
-      <div className="flex">
-        {/* Left image */}
-        <div className="w-40 min-w-40 h-40 bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-          {picture ? (
-            <img
-              src={picture}
-              alt={title || "Article image"}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <span className="text-slate-500 text-sm">No Image</span>
-          )}
-        </div>
-
-        {/* Divider */}
-        <div className="w-px bg-slate-200 dark:bg-slate-800" />
-
-        {/* Right content */}
-        <div className="flex-1 p-4 md:p-5">
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0">
-              <h3 className="text-base md:text-lg font-semibold text-slate-900 dark:text-slate-100 truncate">
-                {title || "-"}
-              </h3>
-
-              <a
-                href={url}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-1 inline-block text-sm text-indigo-600 hover:text-indigo-700 underline underline-offset-2 break-all dark:text-indigo-400 dark:hover:text-indigo-300"
-                title={url}
-              >
-                {url || "-"}
-              </a>
-
-              <div className="mt-2 text-sm">
-                <span className="font-medium text-slate-700 dark:text-slate-300">
-                  Impact:
-                </span>{" "}
-                <span className="text-slate-800 dark:text-slate-200">
-                  {impact || "-"}
-                </span>
-              </div>
-
-              <div className="mt-1">
-                <span
-                  className={`inline-block text-xs px-2 py-1 rounded-full border ${sentimentBadge}`}
-                >
-                  Sentiment: {sentiment || "-"}
-                </span>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex flex-col gap-2 shrink-0">
-              <button
-                onClick={onResummarize}
-                className="px-3 py-2 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 active:scale-[.98] transition dark:border-indigo-900/40 dark:bg-indigo-900/30 dark:text-indigo-200 dark:hover:bg-indigo-900/40"
-              >
-                Resummarize
-              </button>
-              <button
-                onClick={onDelete}
-                className="px-3 py-2 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 active:scale-[.98] transition dark:border-rose-900/40 dark:bg-rose-900/30 dark:text-rose-200 dark:hover:bg-rose-900/40"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-
-          {/* Summary */}
-          <div className="mt-3 text-sm">
-            <div className="font-medium text-slate-700 dark:text-slate-300 mb-1">
-              Article Summary
-            </div>
-            {bullets.length ? (
-              <ul className="list-disc ml-5 leading-6 text-slate-800 dark:text-slate-200">
-                {bullets.map((b, i) => (
-                  <li key={i} className="pl-1">
-                    {b}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="text-slate-500 italic">No summary</div>
-            )}
-          </div>
-
-          {/* Keywords */}
-          <div className="mt-3">
-            <div className="font-medium text-slate-700 dark:text-slate-300 mb-1">
-              Keywords
-            </div>
-            {chips.length ? (
-              <div className="flex flex-wrap gap-2">
-                {chips.map((k, i) => (
-                  <span
-                    key={i}
-                    className="text-xs px-2 py-1 rounded-full border border-slate-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                  >
-                    {k}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <div className="text-slate-500 italic text-sm">—</div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ------------------------------
-// PAGE (NewsFlashAI style)
-// ------------------------------
-export default function MyArticlePage() {
-  const dispatch = useDispatch();
-  const articles = useSelector(selectArticles);
-  const loading = useSelector(selectArticlesLoading);
-  const error = useSelector(selectArticlesError);
-
-  // optional search (client-side for now)
-  const [search, setSearch] = useState("");
+  const loadArticles = async () => {
+    if (!ensureAuthedOrRedirect()) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const { data } = await BASE_URL.get("/articles", {
+        headers: { ...getAuthHeaders() },
+      });
+      const rows = Array.isArray(data) ? data : data.data || [];
+      setArticles(rows);
+    } catch (err) {
+      const status = err?.response?.status;
+      if (status === 401 || status === 403) {
+        try {
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("user");
+        } catch {
+          null;
+        }
+        navigate("/login");
+        return;
+      }
+      setError(err?.response?.data?.message || err.message || "Failed to load");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    dispatch(fetchArticles());
-  }, [dispatch]);
+    loadArticles();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return articles;
-    return articles.filter((a) => {
-      const hay = `${a.title ?? ""} ${a.url ?? ""} ${a.summary ?? ""} ${a.keywords ?? ""} ${a.impact ?? ""}`.toLowerCase();
-      return hay.includes(q);
-    });
-  }, [articles, search]);
+  const handleResummarize = async (id) => {
+    if (!ensureAuthedOrRedirect()) return;
+    try {
+      await BASE_URL.post(
+        "/ai/summarize",
+        { articleId: id, persist: true },
+        { headers: { ...getAuthHeaders() } }
+      );
+      await loadArticles();
+    } catch (err) {
+      const status = err?.response?.status;
+      if (status === 401 || status === 403) {
+        try {
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("user");
+        } catch {
+          null;
+        }
+        navigate("/login");
+      } else {
+        console.error(err);
+      }
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!ensureAuthedOrRedirect()) return;
+    try {
+      await BASE_URL.delete(`/articles/${id}`, {
+        headers: { ...getAuthHeaders() },
+      });
+      setArticles((prev) => prev.filter((a) => a.id !== id));
+    } catch (err) {
+      const status = err?.response?.status;
+      if (status === 401 || status === 403) {
+        try {
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("user");
+        } catch {
+          null;
+        }
+        navigate("/login");
+      } else {
+        console.error(err);
+      }
+    }
+  };
+
+  const handleCheckNotes = (article) => {
+    if (!article?.id) return;
+    navigate(`/notes/${article.id}`, { state: { article } });
+  };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 md:px-6 py-6">
-      <header className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-          My Articles
-        </h1>
+    <div className="relative min-h-screen">
+      {/* Background layers */}
+      <div className="pointer-events-none absolute inset-0 -z-10">
+        {/* Background image */}
+        <div className="absolute inset-0 bg-[url('https://wallpapers.com/images/featured/old-newspaper-background-xayuetybyd5mf1st.jpg')] bg-cover bg-center opacity-40" />
+        {/* Gradient overlay */}
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              "radial-gradient(60% 60% at 100% 0%, rgba(88,160,200,0.18) 0%, rgba(88,160,200,0) 60%)," +
+              "radial-gradient(55% 55% at 0% 100%, rgba(253,245,170,0.25) 0%, rgba(253,245,170,0) 60%)," +
+              "linear-gradient(135deg, rgba(11,29,46,0.7) 0%, rgba(17,63,103,0.5) 42%, rgba(88,160,200,0.35) 100%)",
+          }}
+        />
+        {/* Veil */}
+        <div className="absolute inset-0 bg-[#0b1d2e]/25" />
+      </div>
 
-        {/* Search (optional) */}
-        <div className="relative w-full sm:w-80">
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search title, URL, keywords…"
-            className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100 dark:placeholder-slate-500"
-          />
-          {search && (
-            <button
-              onClick={() => setSearch("")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-xs"
-            >
-              Clear
-            </button>
-          )}
-        </div>
-      </header>
+      {/* Content */}
+      <div className="mx-auto max-w-6xl px-4 py-6">
+        {/* Header */}
+        <header className="mb-5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight text-[#FFFFFF]">
+                My Articles
+              </h1>
+              <p className="text-sm text-[#FFFFFF]">
+                Ringkasan artikel yang sudah kamu simpan & olah dengan AI.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={loadArticles}
+                className="rounded-full bg-[#113F67] text-white px-4 py-2 text-sm hover:opacity-90"
+                title="Refresh list"
+              >
+                Refresh
+              </button>
+              <a
+                href="/summarizer"
+                className="rounded-full bg-[#58A0C8] text-white px-4 py-2 text-sm hover:opacity-90"
+                title="Summarize new article"
+              >
+                New Summary
+              </a>
+            </div>
+          </div>
 
-      {loading && (
-        <div className="text-slate-500 mb-3">Loading…</div>
-      )}
+          {/* Stat bar */}
+          <div className="mt-3 rounded-xl border border-[#113F67]/10 bg-white/90 shadow-sm px-3 py-2 text-sm text-[#113F67] flex items-center gap-3">
+            <span className="px-2 py-0.5 rounded-full bg-[#FDF5AA] text-[#113F67]">
+              {articles.length} items
+            </span>
+            <span className="text-[#34699A]">
+              Last refresh: {new Date().toLocaleString()}
+            </span>
+          </div>
+        </header>
 
-      {error && (
-        <div className="text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2 mb-4 dark:bg-rose-900/20 dark:text-rose-200 dark:border-rose-800">
-          {String(error)}
-        </div>
-      )}
-
-      <section className="space-y-4">
-        {filtered.map((a) => (
-          <TempHorizontalCard
-            key={a.id}
-            article={a}
-            onResummarize={() => dispatch(resummarizeArticle(a.id))}
-            onDelete={() => dispatch(deleteArticle(a.id))}
-          />
-        ))}
-
-        {!loading && !filtered.length && (
-          <div className="text-slate-500 italic">
-            {search ? "No articles match your search." : "No articles yet."}
+        {/* Loading */}
+        {loading && (
+          <div className="grid grid-cols-1 gap-4">
+            {[...Array(3)].map((_, i) => (
+              <div
+                key={i}
+                className="overflow-hidden rounded-2xl border border-[#113F67]/10 bg-white shadow-sm"
+              >
+                <div className="flex">
+                  <div className="w-40 min-w-40 h-40 bg-[#FDF5AA] animate-pulse" />
+                  <div className="flex-1 p-4">
+                    <div className="h-5 w-2/3 bg-[#FDF5AA] rounded animate-pulse" />
+                    <div className="mt-2 h-3 w-1/3 bg-[#FDF5AA] rounded animate-pulse" />
+                    <div className="mt-3 space-y-2">
+                      <div className="h-3 w-full bg-[#FDF5AA] rounded animate-pulse" />
+                      <div className="h-3 w-5/6 bg-[#FDF5AA] rounded animate-pulse" />
+                      <div className="h-3 w-2/3 bg-[#FDF5AA] rounded animate-pulse" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
-      </section>
+
+        {/* Error */}
+        {error && (
+          <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 mb-4 text-rose-700">
+            {error}
+          </div>
+        )}
+
+        {/* List */}
+        {!loading && !error && (
+          <section className="space-y-4">
+            {articles.map((a) => (
+              <div
+                key={a.id}
+                className="overflow-hidden rounded-2xl border border-[#113F67]/10 bg-white shadow-sm"
+              >
+                <ArticleCard
+                  article={a}
+                  onResummarize={() => handleResummarize(a.id)}
+                  onDelete={() => handleDelete(a.id)}
+                  onCheckNotes={handleCheckNotes}
+                />
+              </div>
+            ))}
+
+            {/* Empty state */}
+            {!articles.length && (
+              <div className="rounded-2xl border border-dashed border-[#113F67]/20 bg-white/70 p-8 text-center">
+                <div className="mx-auto mb-3 h-14 w-14 rounded-2xl bg-[#FDF5AA] grid place-items-center text-[#113F67] text-xl">
+                  📰
+                </div>
+                <h2 className="text-[#113F67] font-semibold">No articles yet</h2>
+                <p className="text-sm text-[#34699A] mt-1">
+                  Mulai dengan men-summary artikel favoritmu.
+                </p>
+                <a
+                  href="/summarizer"
+                  className="inline-block mt-4 rounded-full bg-[#58A0C8] text-white px-4 py-2 text-sm hover:opacity-90"
+                >
+                  Summarize an Article
+                </a>
+              </div>
+            )}
+          </section>
+        )}
+      </div>
     </div>
   );
 }

@@ -1,3 +1,5 @@
+import { Link } from "react-router";
+
 export default function NewsCard({ article, onSummarize }) {
   if (!article) return null;
 
@@ -10,24 +12,24 @@ export default function NewsCard({ article, onSummarize }) {
   const handleSummarize = (e) => {
     e.preventDefault();
     e.stopPropagation();
+
     if (typeof onSummarize === "function") return onSummarize(article);
+
     if (!authed) {
       window.location.href = "/login";
       return;
     }
-    const target = `/summarizer?url=${encodeURIComponent(url || "")}`;
+
+    // Sertakan imageUrl agar Summarizer menandai field sebagai required
+    const target =
+      `/summarizer?url=${encodeURIComponent(url || "")}` +
+      `&imageUrl=${encodeURIComponent(imageUrl || "")}`;
+
     window.location.href = target;
   };
 
   return (
     <article className="rounded-xl bg-white p-4 shadow hover:shadow-md transition h-[440px] flex flex-col">
-      <a
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="group flex-1 flex flex-col"
-        title={title || "Open article"}
-      >
         {/* Thumbnail (fixed height) */}
         <div className="h-44 w-full overflow-hidden rounded-lg bg-[#FDF5AA]">
           {imageUrl ? (
@@ -82,9 +84,7 @@ export default function NewsCard({ article, onSummarize }) {
           </p>
         )}
 
-        {/* filler to keep button at bottom inside fixed card height */}
         <div className="mt-auto" />
-      </a>
 
       {/* Actions (pinned to bottom) */}
       <div className="pt-3">
