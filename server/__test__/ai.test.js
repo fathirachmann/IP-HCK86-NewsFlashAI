@@ -6,7 +6,11 @@ jest.mock('../utils/jwt', () => ({
 
 jest.mock('../models', () => ({
 	User: { findByPk: jest.fn().mockResolvedValue({ id: 1, email: 'test@test.com', name: 'Test' }) },
-	Article: { findByPk: jest.fn(), create: jest.fn() }
+	Article: {
+		findByPk: jest.fn().mockResolvedValue(null),
+		findOne: jest.fn().mockResolvedValue(null),
+		create: jest.fn().mockResolvedValue({ id: 123 })
+	}
 }));
 
 // Mock extractTextFromUrl so URL path provides sufficient content
@@ -19,7 +23,9 @@ jest.mock('@google/genai', () => ({
 	GoogleGenAI: jest.fn().mockImplementation(() => ({
 		models: {
 			generateContent: jest.fn((options) => {
-				if (options.content) {
+				// controller sends prompt in `contents` property; accept either
+				const hasContents = options.contents || options.content;
+				if (hasContents) {
 					return Promise.resolve({
 						text: JSON.stringify({
 							bullets: ['a', 'b', 'c', 'd', 'e'],
@@ -88,7 +94,8 @@ describe('Additional /ai/summarize tests', () => {
 			.send({ articleId: 999 });
 
 		expect(res.status).toBe(404);
-		expect(res.body).toHaveProperty('error', 'Article not found');
+		expect(res.body).toHaveProperty('error');
+		expect(res.body.error.message).toBe('Article not found');
 	});
 
 	it('creates a new article when url and user are provided', async () => {
@@ -103,7 +110,7 @@ describe('Additional /ai/summarize tests', () => {
 	});
 
 	it('updates an existing article when articleId is valid', async () => {
-		const mockArticle = { id: 1, update: jest.fn() };
+		const mockArticle = { id: 1, title: 'Existing article title - long placeholder content to exceed min length. '.repeat(2), update: jest.fn() };
 		require('../models').Article.findByPk.mockResolvedValue(mockArticle);
 
 		const res = await request(app)
@@ -127,8 +134,10 @@ describe('Additional /ai/summarize tests', () => {
 			.set('Authorization', `Bearer dummy-token`)
 			.send({ content: 'This is a sufficiently long content. '.repeat(10) });
 
-		expect(res.status).toBe(502);
-		expect(res.body).toHaveProperty('error', 'AI response invalid');
+	expect(res.status).toBe(502);
+	// error payload is { error: { code, message } }
+	expect(res.body).toHaveProperty('error');
+	expect(res.body.error.message).toBe('AI response invalid');
 	});
 });
 

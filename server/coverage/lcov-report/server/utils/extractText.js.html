@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">18.75% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>3/16</span>
+                <span class='fraction'>16/16</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/15</span>
+                <span class='fraction'>15/15</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/2</span>
+                <span class='fraction'>2/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">20% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>3/15</span>
+                <span class='fraction'>15/15</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -87,51 +87,51 @@
 <a name='L22'></a><a href='#L22'>22</a>
 <a name='L23'></a><a href='#L23'>23</a>
 <a name='L24'></a><a href='#L24'>24</a>
-<a name='L25'></a><a href='#L25'>25</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<a name='L25'></a><a href='#L25'>25</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">const axios = require("axios");
 const cheerio = require("cheerio");
 &nbsp;
-async function <span class="fstat-no" title="function not covered" >extractTextFromUrl(</span>url) {
-  const { data: html } = <span class="cstat-no" title="statement not covered" >await axios.get(url, { timeout: 10000 });</span>
-  const $ = <span class="cstat-no" title="statement not covered" >cheerio.load(html);</span>
+async function extractTextFromUrl(url) {
+  const { data: html } = await axios.get(url, { timeout: 10000 });
+  const $ = cheerio.load(html);
 &nbsp;
-  const title = <span class="cstat-no" title="statement not covered" >$("head &gt; title").text()?.trim();</span>
-  const metaDesc = <span class="cstat-no" title="statement not covered" >$('meta[name="description"]').attr("content") || $('meta[property="og:description"]').attr("content") || "";</span>
-  const ogTitle = <span class="cstat-no" title="statement not covered" >$('meta[property="og:title"]').attr("content") || "";</span>
+  const title = $("head &gt; title").text()?.trim();
+  const metaDesc = $('meta[name="description"]').attr("content") || $('meta[property="og:description"]').attr("content") || "";
+  const ogTitle = $('meta[property="og:title"]').attr("content") || "";
 &nbsp;
-  const paras = <span class="cstat-no" title="statement not covered" >[];</span>
-<span class="cstat-no" title="statement not covered" >  $("p").each(<span class="fstat-no" title="function not covered" >(_</span>, el) =&gt; {</span>
-    const t = <span class="cstat-no" title="statement not covered" >$(el).text().trim();</span>
-<span class="cstat-no" title="statement not covered" >    if (t &amp;&amp; t.length &gt; 40) <span class="cstat-no" title="statement not covered" >paras.push(t);</span></span>
+  const paras = [];
+  $("p").each((_, el) =&gt; {
+    const t = $(el).text().trim();
+    if (t &amp;&amp; t.length &gt; 40) paras.push(t);
   });
 &nbsp;
-  const body = <span class="cstat-no" title="statement not covered" >paras.slice(0, 8).join("\n\n");</span>
-  const combined = <span class="cstat-no" title="statement not covered" >[ogTitle || title, metaDesc, body].filter(Boolean).join("\n\n");</span>
+  const body = paras.slice(0, 8).join("\n\n");
+  const combined = [ogTitle || title, metaDesc, body].filter(Boolean).join("\n\n");
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  return combined || (title || metaDesc || "");</span>
+  return combined || (title || metaDesc || "");
 }
 &nbsp;
 module.exports = { extractTextFromUrl };
@@ -142,7 +142,7 @@ module.exports = { extractTextFromUrl };
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-21T11:15:19.364Z
+                at 2025-08-21T13:02:02.003Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

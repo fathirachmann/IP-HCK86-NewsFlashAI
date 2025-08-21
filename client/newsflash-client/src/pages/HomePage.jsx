@@ -85,7 +85,6 @@ export default function HomePage() {
           <div className="md:col-span-2">
             <label className="block text-xs text-[#113F67]/80 mb-1">Query</label>
             <input
-              value={""}
               onChange={(e) => setQuery(e.target.value)}
               type="search"
               placeholder="Search topic…"

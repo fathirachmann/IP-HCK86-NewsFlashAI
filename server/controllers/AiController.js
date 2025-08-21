@@ -3,9 +3,12 @@ const { Article } = require("../models");
 const { extractTextFromUrl } = require("../utils/extractText");
 
 // Schema JSON final
-// { "bullets": string[<=5], "sentiment": "positive|neutral|negative", "keywords": string[<=5] }
+// { "bullets": string[<=5], "sentiment": "positive|neutral|negative", "keywords": string[<=5], "impact": "Level - short description" }
 
-const ai = new GoogleGenAI({apiKey: process.env.GOOGLE_API_KEY});
+// Create AI client per-call to allow tests to override the mocked constructor
+function makeAi() {
+  return new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
+}
 
 // cepat: "gemini-1.5-flash"; lebih akurat: "gemini-1.5-pro"
 const MODEL_ID = process.env.GEMINI_MODEL || "gemini-1.5-flash";
@@ -39,13 +42,24 @@ JSON schema:
 
 async function callGemini(text) {
   const prompt = buildPrompt(text);
+  const ai = makeAi();
+
+  // Catatan: beberapa versi SDK mengembalikan resp.response.text()
   const resp = await ai.models.generateContent({
     model: MODEL_ID,
     contents: prompt,
   });
-  const raw = resp.text;
-  const jsonStr = raw.replace(/```json|```/g, "").trim();
-  return JSON.parse(jsonStr);
+
+  const raw = resp?.text || resp?.response?.text?.() || "";
+  const jsonStr = String(raw).replace(/```json|```/g, "").trim();
+
+  try {
+    return JSON.parse(jsonStr);
+  } catch (e) {
+    const err = new Error("Failed to parse AI response");
+    err.output = raw;
+    throw err;
+  }
 }
 
 class AiController {
@@ -72,52 +86,54 @@ class AiController {
       }
 
       if (!text || text.trim().length < 40) {
-        throw { status: 400, message: "Not enough content to summarize. Provide content, url, or valid articleId." };
+        throw {
+          status: 400,
+          message:
+            "Not enough content to summarize. Provide content, url, or valid articleId.",
+        };
       }
 
       // 2) Panggil Gemini
       let result;
       try {
         result = await callGemini(text);
+        console.log(result, "<< INI RESULT AI");
       } catch (e) {
-        // fallback parsing bila output tidak valid JSON
-        // cari blok {...}
+        // fallback parsing bila output tidak valid JSON → cari blok {...}
         const m = (e.output || e.message || "").match(/\{[\s\S]*\}/);
         if (m) {
           try {
             result = JSON.parse(m[0]);
-          } catch (parseErr) {
-            // If parsing still fails, convert to AI response error for downstream handling
-            throw { status: 502, message: 'AI response invalid' };
+          } catch {
+            throw { status: 502, message: "AI response invalid" };
           }
         } else {
-          // No JSON-like block, treat as bad AI response
-          throw { status: 502, message: 'AI response invalid' };
+          throw { status: 502, message: "AI response invalid" };
         }
       }
 
       // Validasi minimal
-      if (!result || !Array.isArray(result.bullets) || !result.sentiment || !result.impact) {
+      if (
+        !result ||
+        !Array.isArray(result.bullets) ||
+        result.bullets.length < 1 ||
+        !result.sentiment ||
+        !result.impact
+      ) {
         throw { status: 502, message: "AI response invalid" };
       }
 
       // 3) Persist (opsional) ke Article
       let saved = null;
-      if (persist && (articleId || url)) {
-        if (!targetArticle && articleId) {
-          targetArticle = await Article.findByPk(articleId);
-        }
-        // Jika belum ada Article & ada url + user, boleh buat otomatis
-        if (!targetArticle && url && req.user?.id) {
-          saved = await Article.create({
-            userId: req.user.id,
-            url,
-            title: (text.split("\n")[0] || "").slice(0, 180),
-            summary: result.bullets.join("\n"),
-            sentiment: result.sentiment,
-            keywords: (result.keywords || []).join(","),
-          });
-        } else if (targetArticle) {
+
+      if (persist) {
+        // a) Jika articleId ada → update langsung artikel itu
+        if (articleId) {
+          targetArticle =
+            targetArticle || (await Article.findByPk(articleId));
+          if (!targetArticle)
+            throw { status: 404, message: "Article not found" };
+
           await targetArticle.update({
             summary: result.bullets.join("\n"),
             sentiment: result.sentiment,
@@ -126,6 +142,38 @@ class AiController {
           });
           saved = targetArticle;
         }
+        // b) Kalau tidak ada articleId tapi ada url → cek existing by (userId,url)
+        else if (url) {
+          // Jika ada user, pakai scope (userId,url). Kalau tidak ada user, fallback ke url saja.
+          const whereClause = req.user?.id
+            ? { userId: req.user.id, url }
+            : { url };
+
+          const existing = await Article.findOne({ where: whereClause });
+
+          if (existing) {
+            await existing.update({
+              summary: result.bullets.join("\n"),
+              sentiment: result.sentiment,
+              keywords: (result.keywords || []).join(","),
+              impact: result.impact,
+            });
+            saved = existing;
+          } else if (req.user?.id) {
+            // Belum ada → create baru untuk user tsb
+            saved = await Article.create({
+              userId: req.user.id,
+              url,
+              title: (text.split("\n")[0] || "").slice(0, 180),
+              summary: result.bullets.join("\n"),
+              sentiment: result.sentiment,
+              keywords: (result.keywords || []).join(","),
+              impact: result.impact,
+            });
+          }
+          // Jika tidak ada req.user, dan tidak ditemukan existing, kita tidak create anonim
+        }
+        // c) Tidak ada articleId dan tidak ada url → tidak ada persist (misal hanya content mentah)
       }
 
       res.status(200).json({

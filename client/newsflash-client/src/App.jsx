@@ -2,6 +2,8 @@ import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router'
 import LoginPage from './pages/LoginPage'
 import Navbar from './components/Navbar'
 import HomePage from './pages/HomePage'
+import SummarizerPage from './pages/SummarizerPage'
+import MyArticlePage from './pages/MyArticlePage'
  
 function AuthLayout () {
   const access_token = localStorage.getItem('access_token')
@@ -46,6 +48,10 @@ function App() {
         </Route>
         <Route path='/' element={<AuthLayout />}>
           <Route index element={<HomePage />} />
+          <Route path='/summarizer' element={<SummarizerPage />} /> 
+          <Route path='/articles' element={<MyArticlePage />} />
+          {/* <Route path='/articles/:id/notes' element={<NotesPage />} /> */}
+          {/* <Route path='/profiles' element={<ProfilePage />} /> */}
         </Route>
       </Routes>
     </BrowserRouter>
