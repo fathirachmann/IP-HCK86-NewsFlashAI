@@ -24,10 +24,10 @@ router.delete("/articles/:id", auth, checkArticleOwner, ArticleController.delete
 // Notes
 router.get("/articles/:id/notes", auth, NotesController.listByArticle);
 router.post("/articles/:id/notes", auth, NotesController.create);
-router.put("/notes/:noteId", auth, checkArticleOwner, NotesController.update);
-router.delete("/notes/:noteId", auth, checkArticleOwner, NotesController.destroy);
+router.put("/articles/:id/notes/:noteId", auth, checkArticleOwner, NotesController.update);
+router.delete("/articles/:id/notes/:noteId", auth, checkArticleOwner, NotesController.destroy);
 
 // AI
-router.post("/ai/summarize", auth, AiController.summarize); // Add auth after test
+router.post("/ai/summarize", auth, AiController.summarize);
 
 module.exports = router;

@@ -50,7 +50,7 @@ async function callGemini(text) {
     contents: prompt,
   });
 
-  const raw = resp?.text || resp?.response?.text?.() || "";
+  const raw = resp?.text || (typeof resp?.response?.text === "function" ? await resp.response.text() : "");
   const jsonStr = String(raw).replace(/```json|```/g, "").trim();
 
   try {
@@ -65,7 +65,7 @@ async function callGemini(text) {
 class AiController {
   static async summarize(req, res, next) {
     try {
-      const { content, url, articleId, persist = true } = req.body;
+      const { content, url, articleId, persist = true, imageUrl } = req.body;
 
       // 1) Resolve teks sumber
       let text = content;
@@ -97,7 +97,6 @@ class AiController {
       let result;
       try {
         result = await callGemini(text);
-        console.log(result, "<< INI RESULT AI");
       } catch (e) {
         // fallback parsing bila output tidak valid JSON → cari blok {...}
         const m = (e.output || e.message || "").match(/\{[\s\S]*\}/);
@@ -123,55 +122,51 @@ class AiController {
         throw { status: 502, message: "AI response invalid" };
       }
 
+      // Helper payload persist
+      const baseUpdate = {
+        summary: result.bullets.join("\n"),
+        sentiment: result.sentiment,
+        keywords: (result.keywords || []).join(","),
+        impact: result.impact,
+      };
+      if (imageUrl) {
+        // hanya set kalau dikirim dari client (mis. NewsAPI)
+        baseUpdate.imageUrl = imageUrl;
+      }
+
       // 3) Persist (opsional) ke Article
       let saved = null;
 
       if (persist) {
         // a) Jika articleId ada → update langsung artikel itu
         if (articleId) {
-          targetArticle =
-            targetArticle || (await Article.findByPk(articleId));
-          if (!targetArticle)
-            throw { status: 404, message: "Article not found" };
+          targetArticle = targetArticle || (await Article.findByPk(articleId));
+          if (!targetArticle) throw { status: 404, message: "Article not found" };
 
-          await targetArticle.update({
-            summary: result.bullets.join("\n"),
-            sentiment: result.sentiment,
-            keywords: (result.keywords || []).join(","),
-            impact: result.impact,
-          });
+          await targetArticle.update(baseUpdate);
           saved = targetArticle;
         }
         // b) Kalau tidak ada articleId tapi ada url → cek existing by (userId,url)
         else if (url) {
           // Jika ada user, pakai scope (userId,url). Kalau tidak ada user, fallback ke url saja.
-          const whereClause = req.user?.id
-            ? { userId: req.user.id, url }
-            : { url };
+          const whereClause = req.user?.id ? { userId: req.user.id, url } : { url };
 
           const existing = await Article.findOne({ where: whereClause });
 
           if (existing) {
-            await existing.update({
-              summary: result.bullets.join("\n"),
-              sentiment: result.sentiment,
-              keywords: (result.keywords || []).join(","),
-              impact: result.impact,
-            });
+            await existing.update(baseUpdate);
             saved = existing;
           } else if (req.user?.id) {
             // Belum ada → create baru untuk user tsb
-            saved = await Article.create({
+            const createPayload = {
               userId: req.user.id,
               url,
               title: (text.split("\n")[0] || "").slice(0, 180),
-              summary: result.bullets.join("\n"),
-              sentiment: result.sentiment,
-              keywords: (result.keywords || []).join(","),
-              impact: result.impact,
-            });
+              ...baseUpdate,
+            };
+            saved = await Article.create(createPayload);
           }
-          // Jika tidak ada req.user, dan tidak ditemukan existing, kita tidak create anonim
+          // Jika tidak ada req.user, dan tidak ditemukan existing, tidak create anonim
         }
         // c) Tidak ada articleId dan tidak ada url → tidak ada persist (misal hanya content mentah)
       }
@@ -181,6 +176,7 @@ class AiController {
         sentiment: result.sentiment,
         keywords: result.keywords || [],
         impact: result.impact,
+        imageUrl: imageUrl ?? saved?.imageUrl ?? null,
         savedArticleId: saved?.id || null,
       });
     } catch (err) {

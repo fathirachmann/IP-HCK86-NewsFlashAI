@@ -1,4 +1,5 @@
 const { Article } = require("../models");
+const { httpError } = require("../utils/httpError");
 
 class ArticleController {
   static async getAll(req, res, next) {

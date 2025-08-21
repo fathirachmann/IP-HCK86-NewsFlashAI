@@ -57,8 +57,10 @@ class NotesController {
   static async destroy(req, res, next) {
     try {
       const { noteId } = req.params;
+      console.log(noteId, "<< noteId to delete");
 
       const note = await Note.findByPk(noteId);
+      console.log(note, "<< note to delete");
       if (!note) throw httpError.notFound("Note not found");
 
       await note.destroy();
