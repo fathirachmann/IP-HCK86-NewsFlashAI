@@ -83,8 +83,17 @@ class AiController {
         // fallback parsing bila output tidak valid JSON
         // cari blok {...}
         const m = (e.output || e.message || "").match(/\{[\s\S]*\}/);
-        if (m) result = JSON.parse(m[0]);
-        else throw e;
+        if (m) {
+          try {
+            result = JSON.parse(m[0]);
+          } catch (parseErr) {
+            // If parsing still fails, convert to AI response error for downstream handling
+            throw { status: 502, message: 'AI response invalid' };
+          }
+        } else {
+          // No JSON-like block, treat as bad AI response
+          throw { status: 502, message: 'AI response invalid' };
+        }
       }
 
       // Validasi minimal
