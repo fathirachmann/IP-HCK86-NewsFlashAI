@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchNews, selectNews } from "../features/news/newsSlice";
 import { generate } from "random-words";
 import NewsCard from "../components/NewsCard";
+import { Link } from "react-router";
 
 export default function HomePage() {
   const dispatch = useDispatch();
@@ -154,15 +155,15 @@ export default function HomePage() {
             {items.map((a, idx) => (
               <div key={idx}>
                 {/* Replace with <NewsCard article={a} /> later */}
-                <a
-                  href={a.url}
+                <Link
+                  to={a.url}
                   target="_blank"
                   rel="noreferrer"
                   className="block group"
                   title={a.title}
                 >
                   <NewsCard article={a} key={idx}/>
-                </a>
+                </Link>
               </div>
             ))}
           </div>

@@ -4,6 +4,7 @@ import Navbar from './components/Navbar'
 import HomePage from './pages/HomePage'
 import SummarizerPage from './pages/SummarizerPage'
 import MyArticlePage from './pages/MyArticlePage'
+import NotePage from './pages/NotePage'
  
 function AuthLayout () {
   const access_token = localStorage.getItem('access_token')
@@ -50,8 +51,7 @@ function App() {
           <Route index element={<HomePage />} />
           <Route path='/summarizer' element={<SummarizerPage />} /> 
           <Route path='/articles' element={<MyArticlePage />} />
-          {/* <Route path='/articles/:id/notes' element={<NotesPage />} /> */}
-          {/* <Route path='/profiles' element={<ProfilePage />} /> */}
+          <Route path='/notes/:id' element={<NotePage />} /> 
         </Route>
       </Routes>
     </BrowserRouter>
