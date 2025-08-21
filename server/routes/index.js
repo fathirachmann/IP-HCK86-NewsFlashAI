@@ -3,26 +3,31 @@ const router = express.Router();
 
 const AuthController = require("../controllers/AuthController");
 const ArticleController = require("../controllers/ArticleController");
-const auth = require("../middlewares/auth");
 const NewsController = require("../controllers/NewsController");
 const AiController = require("../controllers/AiController");
+const NotesController = require("../controllers/NoteController");
+const checkArticleOwner = require("../middlewares/checkArticleOwner");
+const auth = require("../middlewares/auth");
 
-router.get("/health", (req, res) => res.json({ status: "ok" }));
+// Auth
 router.post("/auth/google", AuthController.googleSignIn);
 
 // Public
 router.get("/news/search", NewsController.search);
 
-// News
-router.post("/ai/summarize-public", AiController.summarize);
-
 // Articles
 router.get("/articles", auth, ArticleController.getAll);
 router.post("/articles", auth, ArticleController.create);
-router.put("/articles/:id", auth, ArticleController.update);
-router.delete("/articles/:id", auth, ArticleController.delete);
+router.put("/articles/:id", auth, checkArticleOwner, ArticleController.update);
+router.delete("/articles/:id", auth, checkArticleOwner, ArticleController.delete);
+
+// Notes
+router.get("/articles/:id/notes", auth, NotesController.listByArticle);
+router.post("/articles/:id/notes", auth, NotesController.create);
+router.put("/notes/:noteId", auth, checkArticleOwner, NotesController.update);
+router.delete("/notes/:noteId", auth, checkArticleOwner, NotesController.destroy);
 
 // AI
-router.post("/ai/summarize", auth, AiController.summarize);
+router.post("/ai/summarize", auth, AiController.summarize); // Add auth after test
 
 module.exports = router;

@@ -89,7 +89,7 @@ module.exports = function errorHandler(err, req, res, next) {
   // Tambah details di non-production untuk debugging cepat
   if (process.env.NODE_ENV !== "production") {
     if (details) payload.error.details = details;
-    if (err.stack) payload.error.stack = err.stack;
+    if (err.stack) console.log(err.stack);
   }
 
   // Log ringkas ke console
