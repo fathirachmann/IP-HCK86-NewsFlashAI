@@ -24,6 +24,22 @@ export default function Navbar() {
     return () => window.removeEventListener("storage", load);
   }, []);
 
+  const handleLogout = () => {
+    try {
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("user");
+      setAuthed(false);
+      setUser(null);
+      // ping tab lain agar sinkron
+      try {
+        localStorage.setItem("logout_at", String(Date.now()));
+        localStorage.removeItem("logout_at");
+      } catch {null}
+    } finally {
+      window.location.href = "/login";
+    }
+  };
+
   return (
     <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-[#113F67]/10">
       <div className="mx-auto max-w-6xl px-4 h-16 flex items-center justify-between">
@@ -44,7 +60,7 @@ export default function Navbar() {
             <a href="/" className="text-sm text-[#113F67] hover:underline">
               Home
             </a>
-            <a href="/my-articles" className="text-sm text-[#113F67] hover:underline">
+            <a href="/articles" className="text-sm text-[#113F67] hover:underline">
               My Article
             </a>
             <a
@@ -59,23 +75,24 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* RIGHT: Profile */}
-        <a
-          href="/profile"
-          className="flex items-center gap-2 rounded-full bg-[#58A0C8] text-white text-sm px-3 py-2 hover:opacity-90"
-        >
-          {user?.picture ? (
-            <img
-              src={user.picture}
-              alt="avatar"
-              className="h-6 w-6 rounded-full object-cover"
-              referrerPolicy="no-referrer"
-            />
-          ) : (
-            <div className="h-6 w-6 rounded-full bg-white/20 grid place-items-center">🙂</div>
-          )}
-          <span className="hidden sm:inline">Profile</span>
-        </a>
+        {/* RIGHT: Logout / Login */}
+        {authed ? (
+          <button
+            onClick={handleLogout}
+            className="rounded-full bg-[#58A0C8] text-white text-sm px-3 py-2 hover:opacity-90"
+            title="Log out"
+          >
+            Logout
+          </button>
+        ) : (
+          <a
+            href="/login"
+            className="rounded-full bg-[#58A0C8] text-white text-sm px-3 py-2 hover:opacity-90"
+            title="Sign in"
+          >
+            Login
+          </a>
+        )}
       </div>
 
       {/* Mobile links */}
