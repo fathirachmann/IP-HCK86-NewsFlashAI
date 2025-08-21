@@ -4,9 +4,9 @@ const { httpError } = require("../utils/httpError");
 class NewsController {
   static async search(req, res, next) {
     try {
-      const { q } = req.query;
-      if (!q || q.trim().length < 2) {
-        throw httpError.badRequest("Query 'q' minimal 2 karakter");
+      const { q, page } = req.query;
+      if (q === undefined || q.length < 3) {
+        return next(httpError(400, "Query parameter 'q' is required and must be at least 3 characters long."));
       }
 
       const resp = await axios.get("https://newsapi.org/v2/everything", {
@@ -15,7 +15,8 @@ class NewsController {
           apiKey: '29d68a79322243a9b40384e780215301',
           language: "en",
           sortBy: "publishedAt",
-          pageSize: 10
+          pageSize: 9,
+          page
         },
         timeout: 10000
       });
@@ -30,7 +31,7 @@ class NewsController {
         description: a.description
       }));
 
-      res.json({ articles, totalResults: resp.data.totalResults });
+      res.status(200).json({ articles, totalResults: resp.data.totalResults });
     } catch (err) {
       next(err);
     }
