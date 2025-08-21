@@ -1,1 +1,17 @@
-@import "tailwindcss"
+:root {
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+}
+
+/* Make the font global */
+html, body, #root { height: 100%; }
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Optional: map your existing `font-display` utility to this font */
+.font-display {
+  font-family: var(--font-sans);
+  font-weight: 600;
+}
