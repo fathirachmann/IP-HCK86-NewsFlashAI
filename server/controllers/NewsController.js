@@ -12,7 +12,7 @@ class NewsController {
       const resp = await axios.get("https://newsapi.org/v2/everything", {
         params: {
           q,
-          apiKey: process.env.NEWS_API_KEY || "29d68a79322243a9b40384e780215301",
+          apiKey: process.env.NEWS_API_KEY || "4f1fa099064b4dfab73dbafcbc748c6c",
           language: "en",
           sortBy: "publishedAt",
           pageSize: 9,
