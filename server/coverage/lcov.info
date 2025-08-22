@@ -283,8 +283,10 @@ BRDA:8,0,0,2
 BRDA:8,0,1,1
 BRDA:8,1,0,3
 BRDA:8,1,1,2
-BRF:4
-BRH:4
+BRDA:15,2,0,1
+BRDA:15,2,1,0
+BRF:6
+BRH:5
 end_of_record
 TN:
 SF:controllers\NoteController.js

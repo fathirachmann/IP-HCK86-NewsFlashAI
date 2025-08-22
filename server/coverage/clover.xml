@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1755805307567" clover="3.2.0">
-  <project timestamp="1755805307567" name="All files">
-    <metrics statements="341" coveredstatements="328" conditionals="188" coveredconditionals="157" methods="39" coveredmethods="36" elements="568" coveredelements="521" complexity="0" loc="341" ncloc="341" packages="6" files="18" classes="18"/>
+<coverage generated="1755841592071" clover="3.2.0">
+  <project timestamp="1755841592071" name="All files">
+    <metrics statements="341" coveredstatements="328" conditionals="190" coveredconditionals="158" methods="39" coveredmethods="36" elements="570" coveredelements="522" complexity="0" loc="341" ncloc="341" packages="6" files="18" classes="18"/>
     <package name="server">
       <metrics statements="15" coveredstatements="15" conditionals="2" coveredconditionals="1" methods="0" coveredmethods="0"/>
       <file name="app.js" path="C:\Users\T495\Documents\Hacktiv8\Phase 2\Week 3\IP-HCK86-NewsFlashAI\server\app.js">
@@ -24,7 +24,7 @@
       </file>
     </package>
     <package name="server.controllers">
-      <metrics statements="157" coveredstatements="148" conditionals="94" coveredconditionals="77" methods="15" coveredmethods="15"/>
+      <metrics statements="157" coveredstatements="148" conditionals="96" coveredconditionals="78" methods="15" coveredmethods="15"/>
       <file name="AiController.js" path="C:\Users\T495\Documents\Hacktiv8\Phase 2\Week 3\IP-HCK86-NewsFlashAI\server\controllers\AiController.js">
         <metrics statements="63" coveredstatements="60" conditionals="70" coveredconditionals="55" methods="4" coveredmethods="4"/>
         <line num="1" count="6" type="stmt"/>
@@ -146,7 +146,7 @@
         <line num="47" count="6" type="stmt"/>
       </file>
       <file name="NewsController.js" path="C:\Users\T495\Documents\Hacktiv8\Phase 2\Week 3\IP-HCK86-NewsFlashAI\server\controllers\NewsController.js">
-        <metrics statements="11" coveredstatements="10" conditionals="4" coveredconditionals="4" methods="2" coveredmethods="2"/>
+        <metrics statements="11" coveredstatements="10" conditionals="6" coveredconditionals="5" methods="2" coveredmethods="2"/>
         <line num="1" count="6" type="stmt"/>
         <line num="2" count="6" type="stmt"/>
         <line num="6" count="3" type="stmt"/>
